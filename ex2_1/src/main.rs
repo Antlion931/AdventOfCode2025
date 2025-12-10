@@ -1,8 +1,10 @@
-// Template for Advent of Code 2025
+// Second exercise part one of Advent of Code 2025
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::env;
+
+type uint = u64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
@@ -23,20 +25,61 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     return Ok(());
 }
 
-fn solve_puzzle(input: &str) -> Result<u32, Box<dyn std::error::Error>> {
+fn solve_puzzle(input: &str) -> Result<uint, Box<dyn std::error::Error>> {
+    let mut result = 0;
+
     for range in input.split(',') {
         if let Some((left_boundry, right_boundry)) = range.split_once('-') {
-            let left_boundry: u32 = left_boundry.parse()?;
-            let right_boundry: u32 = right_boundry.parse()?;
+            let mut left_boundry: uint = left_boundry.trim().parse()?;
+            let right_boundry: uint = right_boundry.trim().parse()?;
 
 
+            if left_boundry == 0 {
+                left_boundry = 1;
+            }
+
+            let mut half_left = left_boundry / (10 as uint).pow(count_digits(left_boundry) / 2);
+
+            if count_digits(left_boundry) % 2 == 1 {
+                let silly_pattern =  silly_pattern_creator_odd(half_left);
+                half_left = silly_pattern / (10 as uint).pow(count_digits(silly_pattern) / 2);
+            } else if silly_pattern_creator_even(half_left) < left_boundry {
+                half_left += 1;
+            }
+
+
+            while silly_pattern_creator_even(half_left) <= right_boundry {
+                result += silly_pattern_creator_even(half_left);
+                half_left += 1;
+            }
         }
         else {
             // TODO: Wrong format
         }
     }
     
-    return Ok(0);
+    return Ok(result);
+}
+
+#[inline(always)]
+fn silly_pattern_creator_even(half: uint) -> uint {
+    let amount_of_digits = count_digits(half);
+
+    return half * (10 as uint).pow(amount_of_digits) + half;
+}
+
+#[inline(always)]
+fn silly_pattern_creator_odd(half: uint) -> uint {
+    let amount_of_digits = count_digits(half);
+
+    return (10 as uint).pow(amount_of_digits*2 - 1) + (10 as uint).pow(amount_of_digits - 1);
+}
+
+#[inline(always)]
+fn count_digits(digit: uint) -> u32 {
+    assert!(digit != 0);
+
+    return digit.ilog10() as u32 + 1;
 }
 
 #[cfg(test)]
